@@ -4,9 +4,12 @@ Crop editor GUI for selecting screen regions.
 
 import tkinter as tk
 from tkinter import simpledialog, ttk
-from PIL import ImageGrab, Image, ImageTk
+import mss
+import mss.tools
+from PIL import Image, ImageTk  # Still need PIL for Tkinter image conversion
 import os
 import sys
+import numpy as np
 from typing import Tuple, List, Optional
 
 class CropEditor:
@@ -22,8 +25,15 @@ class CropEditor:
         self.coords = [0, 0, 0, 0]  # x1, y1, x2, y2
         
     def take_screenshot(self) -> None:
-        """Capture the entire screen."""
-        self.screenshot = ImageGrab.grab()
+        """Capture the entire screen using MSS."""
+        with mss.mss() as sct:
+            # Capture the main monitor
+            monitor = sct.monitors[1]  # Primary monitor
+            sct_img = sct.grab(monitor)
+            
+            # Convert to PIL Image for Tkinter compatibility
+            img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
+            self.screenshot = img
         
     def start_editor(self) -> Tuple[int, int, int, int]:
         """
